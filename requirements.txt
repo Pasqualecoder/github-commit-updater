@@ -1,0 +1,4 @@
+GitPython
+python-telegram-bot
+pyTelegramBotAPI
+python-dotenv
