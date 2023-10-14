@@ -1,3 +1,5 @@
+---
+
 # Telegram Git Commit Bot
 
 The Telegram Git Commit Bot is a Python script that monitors a Git repository and sends updates to a Telegram chat whenever a new commit is made. This README provides instructions on how to install and use the bot.
@@ -28,7 +30,7 @@ Before you proceed with setting up the Telegram Git Commit Bot, you need to crea
 
 ## Installation
 
-Now that you have your bot token, proceed with setting up the Telegram Git Commit Bot:
+To simplify the installation process, you can use the provided setup script:
 
 1. Clone the repository or download the script to your local machine.
 
@@ -50,51 +52,23 @@ Now that you have your bot token, proceed with setting up the Telegram Git Commi
      source venv/bin/activate
      ```
 
-4. Install the required Python packages:
+4. Run the setup script to configure the bot. This script will guide you through setting up the bot by entering the required information, such as your bot token, chat ID, refresh delay, repository path, and the current date and time.
 
    ```markdown
-   pip install -r requirements.txt
+   python setup.py
    ```
 
-5. Create a `.env` file with your configuration. Use the provided template and replace placeholders with your bot token and other information:
+   The script will generate an `.env` file with the provided data and, optionally, install the required dependencies.
 
-   ```markdown
-   TOKEN=YOUR_BOT_TOKEN
-   CHAT_ID=YOUR_CHAT_ID
-   REFRESH_DELAY=5
-   REPOSITORY_PATH=YOUR_GIT_REPOSITORY_PATH
-   LAST_COMMIT_DATE=2023-10-14 16:34:03
-   ```
-
-6. Save the `.env` file.
-
-## Obtaining Your Chat ID
-
-To send messages from the Telegram Git Commit Bot to your chat, you need to find your chat ID:
-
-1. **Open Telegram:** Use the Telegram app or [Telegram Web](https://web.telegram.org/).
-
-2. **Start a Chat with Chat ID Bot:** Search for "Chat ID Bot" or use [this link](https://t.me/chatid_bot). Start a chat with the Chat ID Bot.
-
-3. **Get Your Chat ID:** The Chat ID Bot will provide your unique chat or channel `CHAT_ID`, typically in a negative format (e.g., `-1001234567890`).
-
-4. **Copy Your CHAT_ID:** Copy the obtained `CHAT_ID` and paste it into the `.env` file in your Python script.
-
-   ```markdown
-   CHAT_ID=YOUR_CHAT_ID
-   ```
+5. After running the setup script, your bot is ready to use.
 
 ## Usage
 
-To use the Telegram Git Commit Bot, follow these steps:
+To use the Telegram Git Commit Bot, run the following command:
 
-1. Ensure your virtual environment is activated.
-
-2. Run the bot script:
-
-   ```markdown
-   python bot.py
-   ```
+```markdown
+python bot.py
+```
 
 The bot will start running and checking for new commits in your Git repository. It will send updates to your specified Telegram chat whenever there's a new commit.
 
@@ -117,7 +91,5 @@ If you encounter any issues while using the bot, make sure to check the followin
 - Your Git repository path is correct and accessible from the script location.
 
 - Your virtual environment is activated when running the bot.
-
-- You have installed the required Python packages as specified in the installation steps.
 
 The Telegram Git Commit Bot is a useful tool for staying updated on your Git repository's commits and changes. Enjoy using it to streamline your development workflow.
