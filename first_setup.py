@@ -28,7 +28,7 @@ def create_or_update_env_file():
     bot_token = get_input("Enter your bot token: ", validate_token)
     chat_id = get_input("Enter your chat ID: ", validate_chat_id)
     refresh_delay = input("Enter the refresh delay in seconds (e.g., '5'): ")
-    repository_path = get_input("Enter the repository path (e.g., '/path/to/repo/'): ", validate_directory_path)
+    repository_path = get_input("Enter the repository path (e.g., /path/to/repo/): ", validate_directory_path)
     
     # Add single quotes around refresh_delay, repository_path, and current_date_time
     refresh_delay = f"'{refresh_delay}'"

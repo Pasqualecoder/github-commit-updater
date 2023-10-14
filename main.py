@@ -18,6 +18,7 @@ repository_path = env_data['REPOSITORY_PATH']
 last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
+update_sent = False
 
 # log to console
 def log(val):
@@ -40,11 +41,14 @@ def start_commit_updater():
 
 def check_commit():
     global last_commit_date
+    global update_sent
     repo_dir = repository_path
     g = git.cmd.Git(repo_dir)
-    repo = git.Repo(repo_dir)  # create git repo object to work on
+    repo = git.Repo(repo_dir)
     master = repo.head.reference
     repo_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+
+
 
     while True:
         try:
@@ -58,15 +62,22 @@ def check_commit():
         commit_message = master.commit.message
         commit_author = master.commit.author.name
 
-        # new commit
+        # New commit
         if str(commit_date) != str(last_commit_date):
             bot.send_message(chat_id, "Last commit in " + repo_name + "\nTitle: " + commit_message + "  " "\nBy: " +
                              commit_author + "\nDate: " + str(commit_date))
             bot.send_message(chat_id, result)
             last_commit_date = commit_date
             set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
+            
+            # Set update_sent to True
+            '''update_sent = True
+        else:
+            update_sent = False'''
+
         time.sleep(refresh_delay)
 
+        
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
@@ -130,11 +141,13 @@ def set_delay(message):
         set_key(env_path, "REFRESH_DELAY", str(refresh_delay))
         response = "refresh_delay" + " has been set to " + str(refresh_delay) + " sec or " + str(
             round((delay / 60), 2)) + " min"  # by peppe
+        
     except Exception as convert_error:
         response = "Error: " + str(convert_error)
         log(convert_error)
 
     bot.reply_to(message, response)
+    
 
 
 @bot.message_handler(commands=['ls']) # credt
@@ -170,6 +183,7 @@ def help(message):
     help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat percorsoAlFile\n\n/setdelay - Modifica il ritardo per il controllo dei commit. Imposta un ritardo specifico in millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory radice).\n\n/help - Visualizza il seguente messaggio\n"""
 
     bot.reply_to(message, help_message)
+
 
 
 if __name__ == '__main__':
