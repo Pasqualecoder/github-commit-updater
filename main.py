@@ -9,7 +9,8 @@ from dotenv import dotenv_values
 from dotenv import set_key
 
 # BOT SETUP
-env_data = dotenv_values('.env')
+env_path = '.env'
+env_data = dotenv_values(env_path)
 BOT_TOKEN = env_data['TOKEN']
 chat_id = env_data['CHAT_ID']
 refresh_delay = int(env_data['REFRESH_DELAY'])
@@ -18,10 +19,16 @@ last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
 
-
 # log to console
 def log(val):
     print("[" + datetime.datetime.now().isoformat() + "] " + str(val))
+
+
+#  if the path wasn't specified returns ""
+#  else UNISA/path
+def obtain_path(arg: str, old: str) -> str:
+    arg = arg.replace(old, "")
+    return "" if arg == "" else repository_path + "/" + arg
 
 
 def start_commit_updater():
@@ -29,7 +36,6 @@ def start_commit_updater():
     periodic_thread = threading.Thread(target=check_commit)
     periodic_thread.daemon = True
     periodic_thread.start()
-    return
 
 
 def check_commit():
@@ -58,24 +64,33 @@ def check_commit():
                              commit_author + "\nDate: " + str(commit_date))
             bot.send_message(chat_id, result)
             last_commit_date = commit_date
-            set_key('.env', "LAST_COMMIT_DATE", str(last_commit_date))
+            set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
         time.sleep(refresh_delay)
+
+
+@bot.message_handler(commands=['start', 'hello'])
+def send_welcome(message):
+    risposta = "Ue " + message.from_user.first_name
+    bot.reply_to(message, risposta)
 
 
 # /ping command handler
 @bot.message_handler(commands=['ping'])
 def ping_pong(message):
-    bot.send_message(message.chat.id, "pong")
+    bot.reply_to(message, "pong")
 
 
 # /cat command handler
 @bot.message_handler(commands=['cat'])
 def cat_file(message):
+    file_path = ""
+
     try:
-        file_path = message.text.split()[1]  # get file_path
-        file_path = repository_path + "/" + file_path
-        if len(file_path) < 2:
-            response = "Meow, specify the full path to the file in the repo"
+        file_path = obtain_path(message.text, "/cat ")  # get file_path
+
+        # if no path is provided
+        if file_path == "":
+            response = "Meow! Specify the full path to the file in the repo!"
 
         # check if the file exists
         elif not os.path.exists(file_path):
@@ -91,13 +106,70 @@ def cat_file(message):
                 with open(file_path, 'r') as filereader:
                     response = filereader.read()
             else:
-                response = "This is not a plain text file and cannot be displayed."
+                # open the file in binary mode a send the file as a document
+                with open(file_path, 'rb') as file:
+                    bot.send_document(message.chat.id, file)
+                return
 
     except Exception as read_file_error:
-        response = "An error occurred: " + str(read_file_error)
         log(response)
+        response = "Error: " + str(read_file_error)
+
+    response = "I got this path: " + file_path + '\n' + response
+    bot.reply_to(message, response)
+
+
+# /setdelay command handler
+@bot.message_handler(commands=['setdelay'])
+def set_delay(message):
+    global refresh_delay
+
+    try:
+        delay = int(message.text.split()[1])
+        refresh_delay = delay
+        set_key(env_path, "REFRESH_DELAY", str(refresh_delay))
+        response = "refresh_delay" + " has been set to " + str(refresh_delay) + " sec or " + str(
+            round((delay / 60), 2)) + " min"  # by peppe
+    except Exception as convert_error:
+        response = "Error: " + str(convert_error)
+        log(convert_error)
 
     bot.reply_to(message, response)
+
+
+@bot.message_handler(commands=['ls']) # credt
+def ls(message):
+    try:
+        response = ""
+        dir_path = message.text.replace("/ls ", "")  # Correct the path extraction
+
+        if dir_path == "/ls":
+            dir_path = repository_path  # Set the root directory path
+        else:
+            dir_path = dir_path.strip()  # Remove leading/trailing spaces
+
+        response = f"ls of {dir_path}\n"
+
+        # Verifica se il percorso è una directory esistente
+        if os.path.isdir(dir_path):
+            # Ottieni una lista di tutti i file nella directory
+            file_list = os.listdir(dir_path)
+            # Stampa il nome di ciascun file
+            for filename in file_list:
+                response += f"{filename}\n"
+        else:
+            response = "Directory not found."
+
+    except Exception as error:
+        response = f"Error: {str(error)}"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['help'])
+def help(message):
+    help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat percorsoAlFile\n\n/setdelay - Modifica il ritardo per il controllo dei commit. Imposta un ritardo specifico in millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory radice).\n\n/help - Visualizza il seguente messaggio\n"""
+
+    bot.reply_to(message, help_message)
 
 
 if __name__ == '__main__':

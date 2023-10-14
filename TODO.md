@@ -6,3 +6,8 @@ once a minute showing the current time. Doing so if
 the showed time is different from the current time it
 means that the bot is offline.
 
+- ### ls
+print the files of a directory
+
+- ### change interval
+- cambia intervallo
