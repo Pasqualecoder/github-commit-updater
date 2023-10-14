@@ -14,6 +14,51 @@ Before you can use the Telegram Git Commit Bot, you'll need to have the followin
 
 3. **Python Environment:** The bot is written in Python, so you should have Python installed on your system. You can download Python from [Python's official website](https://www.python.org/downloads/).
 
+Sure, here's a tutorial on how to create a Telegram bot:
+
+## Creating a Telegram Bot
+
+To create a Telegram bot, you'll need to interact with the BotFather, a Telegram bot that helps you create and manage other bots. Follow these steps to create your own bot:
+
+1. **Open Telegram:** Ensure you have the Telegram app installed on your device or use the [Telegram Web](https://web.telegram.org/) version.
+
+2. **Search for the BotFather:** Open Telegram and use the search bar to find the "BotFather" bot. You can do this by searching for "@BotFather."
+
+3. **Start a Chat:** Once you find the BotFather, start a chat with it by clicking on the "Start" button.
+
+4. **Create a New Bot:** To create a new bot, you need to send the command `/newbot` to the BotFather. Type `/newbot` and follow the on-screen instructions.
+
+   - **Choose a Name:** You will be asked to choose a name for your bot. This name will be the display name of your bot. Choose a unique and descriptive name.
+
+   - **Choose a Username:** Next, you'll be asked to choose a username for your bot. This username must be unique and end with "bot." For example, if your bot's name is "MyGitCommitBot," your username could be "@MyGitCommitBot." The BotFather will confirm if the username is available.
+
+5. **Bot Created:** Once you successfully create your bot, the BotFather will provide you with a message containing your bot's token. This token is essential for authenticating your bot with the Telegram API and should be kept secret. It will look something like this:
+
+   ```
+   Use this token to access the HTTP API:
+   1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
+   ```
+
+6. **Keep Your Token Safe:** Store your bot's token in a safe place. Do not share it publicly or expose it in your code or repositories.
+
+Now that you've created your Telegram bot, you can use the provided token to integrate it with the Telegram Git Commit Bot as described in the previous instructions. The bot will use this token to send messages to your Telegram chat.
+
+## Setting Up the Telegram Bot in Your Code
+
+After creating your Telegram bot and obtaining the bot token, you can use it in your code to send messages to your Telegram chat. Here's how to set up the bot in your code:
+
+1. In your code, replace the `BOT_TOKEN` value in the `.env` file with the token you received from the BotFather:
+
+   ```markdown
+   TOKEN=YOUR_BOT_TOKEN
+   ```
+
+2. Ensure that the chat ID (`CHAT_ID`) in your `.env` file is set to the chat or channel where you want to receive bot messages. You can create a new chat or use an existing one.
+
+3. Run your bot script. It will use the provided token to authenticate with the Telegram API and start sending messages to the specified chat whenever there's a new Git commit.
+
+That's it! You've successfully created a Telegram bot and integrated it with your Python script to monitor and send updates about Git commits.
+
 ## Installation
 
 1. Clone the repository or download the script to your local machine.
