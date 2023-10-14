@@ -8,6 +8,7 @@ import telebot
 from dotenv import dotenv_values
 from dotenv import set_key
 
+# BOT SETUP
 env_data = dotenv_values('.env')
 BOT_TOKEN = env_data['TOKEN']
 chat_id = env_data['CHAT_ID']
@@ -20,8 +21,7 @@ bot.send_message(chat_id, "I'm alive!")
 
 # log to console
 def log(val):
-    # FIXME: [<class 'datetime.datetime'>] I'm alive!
-    print("[" + str(datetime.datetime) + "] " + str(val))
+    print("[" + datetime.datetime.now().isoformat() + "] " + str(val))
 
 
 def start_commit_updater():
