@@ -69,7 +69,7 @@ To use the Telegram Git Commit Bot, follow these steps:
 2. Run the bot script:
 
    ```
-   python bot.py
+   python main.py
    ```
 
 3. The bot will start running and checking for new commits in your Git repository. It will send updates to your specified Telegram chat whenever a new commit is made.
