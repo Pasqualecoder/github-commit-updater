@@ -1,3 +1,5 @@
+Sure, here's an updated README with the addition of the `/update` command and the explanation for its usage:
+
 ---
 
 # Telegram Git Commit Bot
@@ -55,7 +57,7 @@ To simplify the installation process, you can use the provided setup script:
 4. Run the setup script to configure the bot. This script will guide you through setting up the bot by entering the required information, such as your bot token, chat ID, refresh delay, repository path, and the current date and time.
 
    ```markdown
-   python first_setup.py
+   python setup.py
    ```
 
    The script will generate an `.env` file with the provided data and, optionally, install the required dependencies.
@@ -80,6 +82,7 @@ The bot responds to the following commands in the Telegram chat:
 - `/cat`: Allows you to view the content of a file in the Git repository.
 - `/setdelay`: Modifies the refresh delay for checking commits.
 - `/ls`: Lists the contents of a specified directory in the Git repository.
+- `/update`: Manually checks for new commits and sends an update message. If no new commits are available, it will send a "Last update already sent!" message.
 - `/help`: Displays a help message with a list of available commands.
 
 ## Troubleshooting
