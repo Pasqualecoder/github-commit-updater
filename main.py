@@ -146,7 +146,7 @@ def ls(message):
         if dir_path == "/ls":
             dir_path = repository_path  # Set the root directory path
         else:
-            dir_path = dir_path.strip()  # Remove leading/trailing spaces
+            dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
 
         response = f"ls of {dir_path}\n"
 
