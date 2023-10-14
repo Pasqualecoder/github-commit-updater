@@ -57,7 +57,7 @@ To simplify the installation process, you can use the provided setup script:
 4. Run the setup script to configure the bot. This script will guide you through setting up the bot by entering the required information, such as your bot token, chat ID, refresh delay, repository path, and the current date and time.
 
    ```markdown
-   python setup.py
+   python first)setup.py
    ```
 
    The script will generate an `.env` file with the provided data and, optionally, install the required dependencies.
@@ -69,7 +69,7 @@ To simplify the installation process, you can use the provided setup script:
 To use the Telegram Git Commit Bot, run the following command:
 
 ```markdown
-python bot.py
+python main.py
 ```
 
 The bot will start running and checking for new commits in your Git repository. It will send updates to your specified Telegram chat whenever there's a new commit.
