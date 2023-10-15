@@ -25,6 +25,17 @@ def log(val):
     print("[" + datetime.datetime.now().isoformat() + "] " + str(val))
 
 
+# allows to check if refresh_delay has been changed while sleeping
+# if it has been changed, dolphin_sleep() will stop
+def dolphin_sleep():
+    global refresh_delay
+    before_delay = refresh_delay
+    i = 0
+    while i < before_delay == refresh_delay:
+        time.sleep(1)
+        i += 1
+
+
 #  if the path wasn't specified returns ""
 #  else UNISA/path
 def obtain_path(arg: str, old: str) -> str:
@@ -52,8 +63,11 @@ def check_commit():
             result = g.pull()
         except Exception as failed_commit:
             print(failed_commit)
-            time.sleep(refresh_delay)
+            dolphin_sleep()
             continue
+
+        print("provo commit")
+        print(refresh_delay)
 
         commit_date = datetime.datetime.fromtimestamp(master.commit.committed_date)
         commit_message = master.commit.message
@@ -66,13 +80,13 @@ def check_commit():
             bot.send_message(chat_id, result)
             last_commit_date = commit_date
             set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
-        time.sleep(refresh_delay)
+        dolphin_sleep()
 
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
-    risposta = "Ue " + message.from_user.first_name
-    bot.reply_to(message, risposta)
+    response = "Ue " + message.from_user.first_name
+    bot.reply_to(message, response)
 
 
 # /ping command handler
@@ -166,8 +180,8 @@ def ls(message):
     bot.reply_to(message, response)
 
 
-@bot.message_handler(commands=['help'])
-def send_help(message):
+@bot.message_handler(commands=['help_it'])
+def send_help_it(message):
     help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per 
     verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il 
     file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat 
@@ -175,6 +189,18 @@ def send_help(message):
     millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o 
     directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory 
     radice).\n\n/help - Visualizza il seguente messaggio\n"""
+
+    bot.reply_to(message, help_message)
+
+
+@bot.message_handler(commands=['help'])
+def send_help_en(message):
+    help_message = """/start - Start the interaction with the bot\n\n/ping - Get a "pong" response from the bot to 
+    check its availability.\n\n/cat - View the contents of a file specified as a parameter. If the file is a text 
+    file, it will be printed in the chat, otherwise it will be sent as a document.\nUsage: /cat pathToFile\n\n/setdelay 
+    - Change the delay for checking commits. Set a specific delay in milliseconds.\nUsage: /setdelay integer\n\n/ls - 
+    Displays the complete list of the contents of a specified folder or directory. \nUsage: /ls folderPath, /ls (to 
+    view the contents of the root directory).\n\n/help - Displays this message\n"""
 
     bot.reply_to(message, help_message)
 
@@ -188,4 +214,4 @@ if __name__ == '__main__':
             bot.polling(interval=5)
         except Exception as connection_timeout:
             print(str(datetime.datetime) + str(connection_timeout))
-            time.sleep(refresh_delay)
+            dolphin_sleep()
