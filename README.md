@@ -1,7 +1,3 @@
-Sure, here's an updated README with the addition of the `/update` command and the explanation for its usage:
-
----
-
 # Telegram Git Commit Bot
 
 The Telegram Git Commit Bot is a Python script that monitors a Git repository and sends updates to a Telegram chat whenever a new commit is made. This README provides instructions on how to install and use the bot.

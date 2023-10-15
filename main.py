@@ -19,6 +19,7 @@ last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
 
+
 # log to console
 def log(val):
     print("[" + datetime.datetime.now().isoformat() + "] " + str(val))
@@ -137,10 +138,9 @@ def set_delay(message):
     bot.reply_to(message, response)
 
 
-@bot.message_handler(commands=['ls']) # credt
+@bot.message_handler(commands=['ls'])  # credt
 def ls(message):
     try:
-        response = ""
         dir_path = message.text.replace("/ls ", "")  # Correct the path extraction
 
         if dir_path == "/ls":
@@ -150,11 +150,11 @@ def ls(message):
 
         response = f"ls of {dir_path}\n"
 
-        # Verifica se il percorso è una directory esistente
+        # check if the path is an existing directory
         if os.path.isdir(dir_path):
-            # Ottieni una lista di tutti i file nella directory
+            # get a list of all files in the dir
             file_list = os.listdir(dir_path)
-            # Stampa il nome di ciascun file
+            # print the name of each file
             for filename in file_list:
                 response += f"{filename}\n"
         else:
@@ -165,9 +165,16 @@ def ls(message):
 
     bot.reply_to(message, response)
 
+
 @bot.message_handler(commands=['help'])
-def help(message):
-    help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat percorsoAlFile\n\n/setdelay - Modifica il ritardo per il controllo dei commit. Imposta un ritardo specifico in millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory radice).\n\n/help - Visualizza il seguente messaggio\n"""
+def send_help(message):
+    help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per 
+    verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il 
+    file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat 
+    percorsoAlFile\n\n/setdelay - Modifica il ritardo per il controllo dei commit. Imposta un ritardo specifico in 
+    millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o 
+    directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory 
+    radice).\n\n/help - Visualizza il seguente messaggio\n"""
 
     bot.reply_to(message, help_message)
 
