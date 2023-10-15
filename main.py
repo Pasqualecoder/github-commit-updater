@@ -66,9 +66,6 @@ def check_commit():
             dolphin_sleep()
             continue
 
-        print("provo commit")
-        print(refresh_delay)
-
         commit_date = datetime.datetime.fromtimestamp(master.commit.committed_date)
         commit_message = master.commit.message
         commit_author = master.commit.author.name
