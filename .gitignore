@@ -1,5 +1,6 @@
 provarepo/
 UNISA/
+.idea/
 .env
 .env2
 config.ini
