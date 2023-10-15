@@ -3,4 +3,5 @@ UNISA/
 .idea/
 .env
 .env2
+.secret
 config.ini
