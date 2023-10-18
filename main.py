@@ -137,7 +137,7 @@ def cat_file(message):
 
 
 # /setdelay command handler
-@bot.message_handler(commands=['setdelay'])
+@bot.message_handler(commands=['delay'])
 def set_delay(message):
     global refresh_delay
 
