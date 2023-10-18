@@ -20,9 +20,21 @@ bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
 update_sent = False
 
+
 # log to console
 def log(val):
     print("[" + datetime.datetime.now().isoformat() + "] " + str(val))
+
+
+# allows to check if refresh_delay has been changed while sleeping
+# if it has been changed, dolphin_sleep() will stop
+def dolphin_sleep():
+    global refresh_delay
+    before_delay = refresh_delay
+    i = 0
+    while i < before_delay == refresh_delay:
+        time.sleep(1)
+        i += 1
 
 
 #  if the path wasn't specified returns ""
@@ -55,7 +67,7 @@ def check_commit():
             result = g.pull()
         except Exception as failed_commit:
             print(failed_commit)
-            time.sleep(refresh_delay)
+            dolphin_sleep()
             continue
 
         commit_date = datetime.datetime.fromtimestamp(master.commit.committed_date)
@@ -69,20 +81,14 @@ def check_commit():
             bot.send_message(chat_id, result)
             last_commit_date = commit_date
             set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
-            
-            # Set update_sent to True
-            '''update_sent = True
-        else:
-            update_sent = False'''
-
-        time.sleep(refresh_delay)
+        dolphin_sleep()
 
         
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
-    risposta = "Ue " + message.from_user.first_name
-    bot.reply_to(message, risposta)
+    response = "Ue " + message.from_user.first_name
+    bot.reply_to(message, response)
 
 
 # /ping command handler
@@ -150,10 +156,9 @@ def set_delay(message):
     
 
 
-@bot.message_handler(commands=['ls']) # credt
+@bot.message_handler(commands=['ls'])  # credt
 def ls(message):
     try:
-        response = ""
         dir_path = message.text.replace("/ls ", "")  # Correct the path extraction
 
         if dir_path == "/ls":
@@ -163,11 +168,11 @@ def ls(message):
 
         response = f"ls of {dir_path}\n"
 
-        # Verifica se il percorso è una directory esistente
+        # check if the path is an existing directory
         if os.path.isdir(dir_path):
-            # Ottieni una lista di tutti i file nella directory
+            # get a list of all files in the dir
             file_list = os.listdir(dir_path)
-            # Stampa il nome di ciascun file
+            # print the name of each file
             for filename in file_list:
                 response += f"{filename}\n"
         else:
@@ -178,9 +183,28 @@ def ls(message):
 
     bot.reply_to(message, response)
 
+
+@bot.message_handler(commands=['help_it'])
+def send_help_it(message):
+    help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per 
+    verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il 
+    file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat 
+    percorsoAlFile\n\n/setdelay - Modifica il ritardo per il controllo dei commit. Imposta un ritardo specifico in 
+    millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o 
+    directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory 
+    radice).\n\n/help - Visualizza il seguente messaggio\n"""
+
+    bot.reply_to(message, help_message)
+
+
 @bot.message_handler(commands=['help'])
-def help(message):
-    help_message = """/start - Inizia l'interazione con il bot\n\n/ping - Ottieni una risposta "pong" dal bot per verificare la sua disponibilità.\n\n/cat - Visualizza il contenuto di un file specificato come parametro. Se il file è un file di testo, verrà stampato nel chat, altrimenti verrà inviato come documento.\nUtilizzo: /cat percorsoAlFile\n\n/setdelay - Modifica il ritardo per il controllo dei commit. Imposta un ritardo specifico in millisecondi.\nUtilizzo: /setdelay intero\n\n/ls - Visualizza l'elenco completo del contenuto di una cartella o directory specificata. \nUtilizzo: /ls percorsoCartella, /ls (per visualizzare il contenuto della directory radice).\n\n/help - Visualizza il seguente messaggio\n"""
+def send_help_en(message):
+    help_message = """/start - Start the interaction with the bot\n\n/ping - Get a "pong" response from the bot to 
+    check its availability.\n\n/cat - View the contents of a file specified as a parameter. If the file is a text 
+    file, it will be printed in the chat, otherwise it will be sent as a document.\nUsage: /cat pathToFile\n\n/setdelay 
+    - Change the delay for checking commits. Set a specific delay in milliseconds.\nUsage: /setdelay integer\n\n/ls - 
+    Displays the complete list of the contents of a specified folder or directory. \nUsage: /ls folderPath, /ls (to 
+    view the contents of the root directory).\n\n/help - Displays this message\n"""
 
     bot.reply_to(message, help_message)
 
@@ -195,4 +219,4 @@ if __name__ == '__main__':
             bot.polling(interval=5)
         except Exception as connection_timeout:
             print(str(datetime.datetime) + str(connection_timeout))
-            time.sleep(refresh_delay)
+            dolphin_sleep()

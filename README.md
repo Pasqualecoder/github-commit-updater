@@ -1,5 +1,3 @@
----
-
 # Telegram Git Commit Bot
 
 The Telegram Git Commit Bot is a Python script that monitors a Git repository and sends updates to a Telegram chat whenever a new commit is made. This README provides instructions on how to install and use the bot.
@@ -55,7 +53,7 @@ To simplify the installation process, you can use the provided setup script:
 4. Run the setup script to configure the bot. This script will guide you through setting up the bot by entering the required information, such as your bot token, chat ID, refresh delay, repository path, and the current date and time.
 
    ```markdown
-   python setup.py
+   python first_setup.py
    ```
 
    The script will generate an `.env` file with the provided data and, optionally, install the required dependencies.
@@ -67,7 +65,7 @@ To simplify the installation process, you can use the provided setup script:
 To use the Telegram Git Commit Bot, run the following command:
 
 ```markdown
-python bot.py
+python main.py
 ```
 
 The bot will start running and checking for new commits in your Git repository. It will send updates to your specified Telegram chat whenever there's a new commit.
@@ -80,6 +78,7 @@ The bot responds to the following commands in the Telegram chat:
 - `/cat`: Allows you to view the content of a file in the Git repository.
 - `/setdelay`: Modifies the refresh delay for checking commits.
 - `/ls`: Lists the contents of a specified directory in the Git repository.
+- `/update`: Manually checks for new commits and sends an update message. If no new commits are available, it will send a "Last update already sent!" message.
 - `/help`: Displays a help message with a list of available commands.
 
 ## Troubleshooting
