@@ -18,7 +18,7 @@ repository_path = env_data['REPOSITORY_PATH']
 last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
-update_sent = False
+
 
 
 # log to console
@@ -53,7 +53,6 @@ def start_commit_updater():
 
 def check_commit():
     global last_commit_date
-    global update_sent
     repo_dir = repository_path
     g = git.cmd.Git(repo_dir)
     repo = git.Repo(repo_dir)
@@ -76,12 +75,28 @@ def check_commit():
 
         # New commit
         if str(commit_date) != str(last_commit_date):
-            bot.send_message(chat_id, "Last commit in " + repo_name + "\nTitle: " + commit_message + "  " "\nBy: " +
+            bot.send_message(chat_id, "New commit in " + repo_name + "\nTitle: " + commit_message + "  " "\nBy: " +
                              commit_author + "\nDate: " + str(commit_date))
-            bot.send_message(chat_id, result)
+            if(result != "Already up to date."):
+                bot.send_message(chat_id, result)
             last_commit_date = commit_date
             set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
         dolphin_sleep()
+
+@bot.message_handler(commands=['lastcommit'])
+def lastcommit(message):
+    repo_dir = repository_path
+    repo = git.Repo(repo_dir)
+    master = repo.head.reference
+    repo_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+
+    commit_date = datetime.datetime.fromtimestamp(master.commit.committed_date)
+    commit_message = master.commit.message
+    commit_author = master.commit.author.name
+
+    # New commit
+    bot.reply_to(message, "Last commit in " + repo_name + "\nTitle: " + commit_message + "  " "\nBy: " +
+                         commit_author + "\nDate: " + str(commit_date))
 
         
 
