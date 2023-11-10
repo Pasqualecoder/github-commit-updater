@@ -1,6 +1,8 @@
 import os
 import datetime
 import time
+import sys
+import signal
 import threading
 import mimetypes
 import git
@@ -19,7 +21,24 @@ last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
 
-
+# graceful exit  
+class Process_Killer:
+   kill = False
+   def __init__(self):
+      signal.signal(signal.SIGINT, self.better_exit)
+      signal.signal(signal.SIGTERM, self.brutal_exit)
+   def better_exit(self, *args):
+      self.kill = True
+      pid = os.getpid()
+      status = os.wait()
+      bot.send_message(chat_id,f"I'm dead! Exit code: {status[1]}")
+      exit(0)
+      # let process die on while exit
+   def brutal_exit(self, *args):
+      self.kill = True
+      bot.send_message(chat_id,"I'm dead! Exit code: {status[1]}")
+      exit(0) # brutal shutdown
+     
 
 # log to console
 def log(val):
@@ -44,6 +63,37 @@ def obtain_path(arg: str, old: str) -> str:
     return "" if arg == "" else repository_path + "/" + arg
 
 
+
+def find(filename: str, dir_name: str) -> str:
+       
+       resulto = ""      
+       if os.path.exists(filename):          
+            return os.path.relpath(filename,"/home/peppe/github-commit-updater/UNISA") #todo: change the relpath start argument to be dynamic 
+       else:    
+            list_dir = list(path_names.name for path_names in os.scandir(dir_name))
+            
+            if len(list_dir) == 0:
+                return ""
+            for dirc in list_dir:
+                
+                if os.path.isdir(dir_name + "/" + dirc):
+                
+                   previous_list = list_dir[:]
+                   resulto = find(filename,(dir_name + "/" + dirc))
+                   list_dir = previous_list[:]
+                   
+                   if resulto:
+                      return resulto
+                      
+                elif dirc == filename:
+                   treasure = dir_name + "/" + dirc
+                   return os.path.relpath(treasure,"/home/peppe/github-commit-updater/UNISA") #todo:1
+             
+            return resulto
+
+
+
+
 def start_commit_updater():
     # run check_commit() in a separate thread
     periodic_thread = threading.Thread(target=check_commit)
@@ -61,7 +111,7 @@ def check_commit():
 
 
 
-    while True:
+    while not killer.kill:
         try:
             result = g.pull()
         except Exception as failed_commit:
@@ -82,6 +132,12 @@ def check_commit():
             last_commit_date = commit_date
             set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
         dolphin_sleep()
+
+
+@bot.message_handler(commands=['stop'])
+def stop(message):
+    bot.reply_to(message, "Stopping...")
+    bot.stop_polling()
 
 @bot.message_handler(commands=['lastcommit'])
 def lastcommit(message):
@@ -112,6 +168,34 @@ def ping_pong(message):
     bot.reply_to(message, "pong")
 
 
+@bot.message_handler(commands=['find'])
+def new_find(message):
+    res = ""
+    filename = str(message.text.split(" ",1)[1:])
+    tmp = filename.strip("['")
+    filename = tmp.strip("']")
+    print(filename)
+    #finds first file in repo recursively (pre-search)
+    #bot.reply_to(message, "yes")
+    try:
+        # if no filename is provided
+        if not filename:
+           response = "Specify  the file to search!"
+           bot.reply_to(message, response)
+        else: 
+           res = find(filename, repository_path)
+           if not res :
+               response = "File Not found!"
+               bot.reply_to(message, response)
+           else: 
+               response = res
+               bot.reply_to(message, response)
+
+    except Exception as e: 
+        print(e)
+        return ""
+
+
 # /cat command handler
 @bot.message_handler(commands=['cat'])
 def cat_file(message):
@@ -119,14 +203,14 @@ def cat_file(message):
 
     try:
         file_path = obtain_path(message.text, "/cat ")  # get file_path
-
+  
         # if no path is provided
         if file_path == "":
-            response = "Meow! Specify the full path to the file in the repo!"
+            response = "Meow! Specify the path or the file in the repo!"
 
         # check if the file exists
-        elif not os.path.exists(file_path):
-            response = "The file doesn't exist"
+        elif not os.path.exists(file_path): 
+               response = "File Not Found!"
 
         else:
             # get the MIME type of the file (_ ignores the rest of the result)
@@ -147,8 +231,9 @@ def cat_file(message):
         log(response)
         response = "Error: " + str(read_file_error)
 
-    response = "I got this path: " + file_path + '\n' + response
+    response = "I got this path: " + file_path + '\n\n' + response
     bot.reply_to(message, response)
+
 
 
 # /setdelay command handler
@@ -186,10 +271,12 @@ def ls(message):
         # check if the path is an existing directory
         if os.path.isdir(dir_path):
             # get a list of all files in the dir
+            numdir = 0
             file_list = os.listdir(dir_path)
             # print the name of each file
             for filename in file_list:
-                response += f"{filename}\n"
+               if (os.isdir(filename)):
+                    response += f"{filename}\n"
         else:
             response = "Directory not found."
 
@@ -226,12 +313,16 @@ def send_help_en(message):
 
 
 if __name__ == '__main__':
+    killer = Process_Killer()
     log("I'm alive!")
     start_commit_updater()
 
-    while True:
+    while not killer.kill:
         try:
-            bot.polling(interval=5)
+            bot.infinity_polling(interval=5)
+            pid = os.get_pid()
         except Exception as connection_timeout:
             print(str(datetime.datetime) + str(connection_timeout))
             dolphin_sleep()
+        if (pid == 0):
+            bot.send_message(chatid,"sto per morire")
