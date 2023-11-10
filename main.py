@@ -1,3 +1,4 @@
+
 import os
 import datetime
 import time
@@ -31,12 +32,13 @@ class Process_Killer:
       self.kill = True
       pid = os.getpid()
       status = os.wait()
-      bot.send_message(chat_id,f"I'm dead! Exit code: {status[1]}")
-      exit(0)
+      bot.send_message(chat_id,f"I'm dead! Status: {status[1]}")
       # let process die on while exit
    def brutal_exit(self, *args):
       self.kill = True
-      bot.send_message(chat_id,"I'm dead! Exit code: {status[1]}")
+      pid = os.getpid()
+      status = os.wait()
+      bot.send_message(chat_id,f"I'm dead! Status: {status[1]}")
       exit(0) # brutal shutdown
      
 
@@ -64,33 +66,46 @@ def obtain_path(arg: str, old: str) -> str:
 
 
 
-def find(filename: str, dir_name: str) -> str:
-       
-       resulto = ""      
-       if os.path.exists(filename):          
-            return os.path.relpath(filename,"/home/peppe/github-commit-updater/UNISA") #todo: change the relpath start argument to be dynamic 
-       else:    
+def find_first(filename: str, dir_name: str) -> str:
+       result = ""
+       if os.path.exists(filename):
+            return os.path.relpath(filename,os.path.abspath(repository_path)) #todo: change the relpath start argument to be dynamic 
+       else:
             list_dir = list(path_names.name for path_names in os.scandir(dir_name))
-            
             if len(list_dir) == 0:
                 return ""
             for dirc in list_dir:
-                
                 if os.path.isdir(dir_name + "/" + dirc):
-                
                    previous_list = list_dir[:]
-                   resulto = find(filename,(dir_name + "/" + dirc))
+                   result = find_first(filename,(dir_name + "/" + dirc))
                    list_dir = previous_list[:]
-                   
-                   if resulto:
-                      return resulto
-                      
+                   if result:
+                      return result
                 elif dirc == filename:
                    treasure = dir_name + "/" + dirc
-                   return os.path.relpath(treasure,"/home/peppe/github-commit-updater/UNISA") #todo:1
-             
-            return resulto
+                   return os.path.relpath(treasure,os.path.abspath(repository_path))
+            return result
 
+
+def find(filename: str, dir_name: str) -> []:
+       result = []
+       if os.path.exists(filename):
+            result += [os.path.relpath(filename,os.path.abspath(repository_path))]
+            return result
+       else:
+            list_dir = list(path_names.name for path_names in os.scandir(dir_name))
+            if len(list_dir) == 0:
+                return result
+            for dirc in list_dir:
+                if os.path.isdir(dir_name + "/" + dirc):
+                   previous_list = list_dir[:]
+                   result += find(filename,(dir_name + "/" + dirc))
+                   list_dir = previous_list[:]
+                elif dirc == filename:
+                   treasure = dir_name + "/" + dirc
+                   result += [os.path.relpath(treasure,os.path.abspath(repository_path))] 
+                   return result
+            return result
 
 
 
@@ -168,32 +183,60 @@ def ping_pong(message):
     bot.reply_to(message, "pong")
 
 
-@bot.message_handler(commands=['find'])
-def new_find(message):
+@bot.message_handler(commands=['find_first', 'findfirst', 'first'])
+def start_find_first(message):
     res = ""
+
     filename = str(message.text.split(" ",1)[1:])
     tmp = filename.strip("['")
     filename = tmp.strip("']")
-    print(filename)
-    #finds first file in repo recursively (pre-search)
-    #bot.reply_to(message, "yes")
+    #finds the first occourrence of a file, given its name.
     try:
-        # if no filename is provided
-        if not filename:
-           response = "Specify  the file to search!"
-           bot.reply_to(message, response)
-        else: 
-           res = find(filename, repository_path)
-           if not res :
-               response = "File Not found!"
-               bot.reply_to(message, response)
-           else: 
-               response = res
-               bot.reply_to(message, response)
+             #no filename is provided
+           if not filename:
+              response = "Specify  the file to search!"
+              bot.reply_to(message, response)
+           else:
+               res = find_first(filename, repository_path)
 
-    except Exception as e: 
-        print(e)
-        return ""
+               if not res :
+                 response = "File Not found!"
+                 bot.reply_to(message, response)
+               else:
+                 response = res
+                 bot.reply_to(message, response)
+
+    except Exception as e:
+         print(e)
+         return
+
+@bot.message_handler(commands=['find', 'all', 'findall'])
+def start_find(message):
+    res = []
+
+    filename = str(message.text.split(" ",1)[1:])
+    tmp = filename.strip("['")
+    filename = tmp.strip("']")
+    #finds file in repo recursively (finds the first one with matching name)
+    try:
+             # if no filename is provided
+           if not filename:
+              response = "Specify  the file to search!"
+              bot.reply_to(message, response)
+           else:
+               res = find(filename, repository_path)
+               if not res :
+                 response = "File Not found!"
+                 bot.reply_to(message, response)
+               else:
+                 for x in res:
+                              bot.reply_to(message, x)
+
+    except Exception as e:
+         print(e)
+         return
+
+
 
 
 # /cat command handler
@@ -203,7 +246,6 @@ def cat_file(message):
 
     try:
         file_path = obtain_path(message.text, "/cat ")  # get file_path
-  
         # if no path is provided
         if file_path == "":
             response = "Meow! Specify the path or the file in the repo!"
@@ -271,12 +313,10 @@ def ls(message):
         # check if the path is an existing directory
         if os.path.isdir(dir_path):
             # get a list of all files in the dir
-            numdir = 0
             file_list = os.listdir(dir_path)
             # print the name of each file
             for filename in file_list:
-               if (os.isdir(filename)):
-                    response += f"{filename}\n"
+                response += f"{filename}\n"
         else:
             response = "Directory not found."
 
