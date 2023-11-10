@@ -13,10 +13,15 @@ means that the bot is offline.
 
 - ### cat
 - if a code get asked with cat send the image with carbon
-- search for the file in the given directory and the directories inside it 
+
 
 - ### help
 - update help file with all new commands 
 
-- ### ls 
-- print all the directories inside the given directory and all files in those directories
+- ### find 
+- insert button to cat the file under every path 
+- insert button to copy the path
+
+- ### push
+- push a file sent by telegram in a given directory
+
