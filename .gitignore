@@ -1,4 +1,5 @@
 provarepo/
+venv
 UNISA/
 .idea/
 .env
