@@ -1,7 +1,6 @@
 import os
 import datetime
 import time
-import sys
 import signal
 import threading
 import mimetypes
@@ -21,6 +20,7 @@ repository_path = env_data['REPOSITORY_PATH']
 last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
+
 
 class Logger:
     def __init__(self, name, log_file):
@@ -61,6 +61,7 @@ class Logger:
 
 logger = Logger(__name__, "file_log.log")
 
+
 # graceful exit
 class ProcessKiller:
     kill = False
@@ -86,7 +87,6 @@ class ProcessKiller:
         exit(0)  # brutal shutdown
 
 
-
 # allows to check if refresh_delay has been changed while sleeping
 # if it has been changed, dolphin_sleep() will stop
 def dolphin_sleep():
@@ -103,6 +103,7 @@ def dolphin_sleep():
 def obtain_path(arg: str, old: str) -> str:
     arg = arg.replace(old, "")
     return "" if arg == "" else repository_path + "/" + arg
+
 
 # FUNCTION NOT USED
 """def find_first(filename: str, dir_name: str) -> str:
@@ -225,13 +226,16 @@ def ping_pong(message):
     bot.reply_to(message, "pong")
 
 
-@bot.message_handler(commands=['find', 'all', 'findall'])
+@bot.message_handler(commands=['find'])
 def start_find(message):
     res = []
     logger.log("info", "executing start_find")
-    filename = str(message.text.split(" ", 1)[1:])
-    tmp = filename.strip("['")
-    filename = tmp.strip("']")
+    # filename = str(message.text.split(" ", 1)[1:])
+    # tmp = filename.strip("['")
+    # filename = tmp.strip("']")
+    filename = message.text.replace("/find ", "")
+    filename = filename.strip()
+
     # finds file in repo recursively (finds the first one with matching name)
     try:
         # if no filename is provided
@@ -349,6 +353,81 @@ def ls(message):
         response = f"Error: {str(error)}"
 
     bot.reply_to(message, response)
+
+
+@bot.message_handler(commands=['push'])
+def push(message):
+    logger.log("info", "executing push")
+    dir_path = message.text.replace("/push ", "")
+    if dir_path == "/push":
+        dir_path = repository_path
+    else:
+        dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
+
+    logger.log("debug", f"in push: Directory recieved: {dir_path}")
+    if os.path.isdir(dir_path):
+        logger.log("debug", f"in push: Directory: {dir_path} Found!")
+        bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo")
+        bot.register_next_step_handler(message, msgToPush, dir_path)
+
+
+def msgToPush(message, dir_path):
+    if message.text:
+        i = 0
+        filename = f"file_{i}.txt"
+        while os.path.isfile(f"{dir_path}/{filename}"):
+            i += 1
+            filename = f"file_{i}.txt"
+        try:
+            with open(f"{dir_path}/{filename}", "w") as file:
+                file.write(message.text)
+            logger.log("info", f"In push: Text message saved as {filename} in {dir_path}")
+        except Exception as e:
+            logger.log("error", f"In push: Error writing text message: {e}")
+
+        repo = git.Repo(repository_path)
+        repo.index.add([f"{dir_path}/{filename}"])
+
+    if message.photo:
+        i = 0
+        filename = f"photo_{i}.jpg"
+        while os.path.isfile(f"{dir_path}/{filename}"):
+            i += 1
+            filename = f"photo_{i}.jpg"
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        new_file = bot.get_file(file_id)
+        try:
+            new_file.download(f'{dir_path}/{filename}')
+            logger.log("info", f"In push: Photo saved as {filename} in {dir_path}")
+        except Exception as e:
+            logger.log("error", f"In push: Error downloading photo: {e}")
+
+    if message.document:
+        document = message.document
+        i = 0
+        filename = document.file_name
+        while os.path.isfile(f"{dir_path}/{filename}"):
+            i += 1
+            name, extension = os.path.splitext(filename)
+            filename = f"{name}_{i}{extension}"
+        file_id = document.file_id
+        try:
+            bot.get_file(file_id).download(f'{dir_path}/{filename}')
+            logger.log("info", f"In push: Document saved as {filename} in {dir_path}")
+        except Exception as e:
+            logger.log("error", f"In push: Error downloading document: {e}")
+
+    commit_message = f"commit from telegram, adding {filename} to {dir_path}"
+    try:
+        repo = git.Repo(repository_path)
+        repo.index.commit(commit_message)
+        origin = repo.remote(name='origin')
+        origin.push()
+        logger.log("info", f"In push: Changes committed and pushed to the repository")
+    except Exception as e:
+        logger.log("error", f"In push: Error in git commit and push: {e}")
+
 
 
 @bot.message_handler(commands=['help_it'])
