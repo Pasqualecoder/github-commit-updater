@@ -1,4 +1,3 @@
-
 import os
 import datetime
 import time
@@ -8,6 +7,7 @@ import threading
 import mimetypes
 import git
 import telebot
+import logging
 from dotenv import dotenv_values
 from dotenv import set_key
 
@@ -22,29 +22,69 @@ last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.send_message(chat_id, "I'm alive!")
 
-# graceful exit  
-class Process_Killer:
-   kill = False
-   def __init__(self):
-      signal.signal(signal.SIGINT, self.better_exit)
-      signal.signal(signal.SIGTERM, self.brutal_exit)
-   def better_exit(self, *args):
-      self.kill = True
-      pid = os.getpid()
-      status = os.wait()
-      bot.send_message(chat_id,f"I'm dead! Status: {status[1]}")
-      # let process die on while exit
-   def brutal_exit(self, *args):
-      self.kill = True
-      pid = os.getpid()
-      status = os.wait()
-      bot.send_message(chat_id,f"I'm dead! Status: {status[1]}")
-      exit(0) # brutal shutdown
-     
+class Logger:
+    def __init__(self, name, log_file):
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
 
-# log to console
-def log(val):
-    print("[" + datetime.datetime.now().isoformat() + "] " + str(val))
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(formatter)
+
+        file_handler = logging.FileHandler(log_file, mode='a')
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+
+        self.logger.addHandler(console_handler)
+        self.logger.addHandler(file_handler)
+
+    def log(self, level, message):
+        if level == 'debug':
+            self.logger.debug(message)
+        elif level == 'info':
+            self.logger.info(message)
+        elif level == 'warning':
+            self.logger.warning(message)
+        elif level == 'error':
+            self.logger.error(message)
+        elif level == 'critical':
+            self.logger.critical(message)
+
+    def close(self):
+        handlers = self.logger.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
+
+
+logger = Logger(__name__, "file_log.log")
+
+# graceful exit
+class ProcessKiller:
+    kill = False
+
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.better_exit)
+        signal.signal(signal.SIGTERM, self.brutal_exit)
+
+    def better_exit(self, *args):
+        self.kill = True
+        pid = os.getpid()
+        status = os.wait()
+        bot.send_message(chat_id, f"I'm dead! Status: {status[1]}")
+        logger.log("info", "process shutdown with better exit")
+        # let process die on while exit
+
+    def brutal_exit(self, *args):
+        self.kill = True
+        pid = os.getpid()
+        status = os.wait()
+        bot.send_message(chat_id, f"I'm dead! Status: {status[1]}")
+        logger.log("info", "process shutdown with brutal shutdown")
+        exit(0)  # brutal shutdown
+
 
 
 # allows to check if refresh_delay has been changed while sleeping
@@ -64,49 +104,48 @@ def obtain_path(arg: str, old: str) -> str:
     arg = arg.replace(old, "")
     return "" if arg == "" else repository_path + "/" + arg
 
-
-
-def find_first(filename: str, dir_name: str) -> str:
-       result = ""
-       if os.path.exists(filename):
-            return os.path.relpath(filename,os.path.abspath(repository_path)) #todo: change the relpath start argument to be dynamic 
-       else:
-            list_dir = list(path_names.name for path_names in os.scandir(dir_name))
-            if len(list_dir) == 0:
-                return ""
-            for dirc in list_dir:
-                if os.path.isdir(dir_name + "/" + dirc):
-                   previous_list = list_dir[:]
-                   result = find_first(filename,(dir_name + "/" + dirc))
-                   list_dir = previous_list[:]
-                   if result:
-                      return result
-                elif dirc == filename:
-                   treasure = dir_name + "/" + dirc
-                   return os.path.relpath(treasure,os.path.abspath(repository_path))
-            return result
+# FUNCTION NOT USED
+"""def find_first(filename: str, dir_name: str) -> str:
+    result = ""
+    if os.path.exists(filename):
+        return os.path.relpath(filename, os.path.abspath(
+            repository_path))  # todo: change the relpath start argument to be dynamic
+    else:
+        list_dir = list(path_names.name for path_names in os.scandir(dir_name))
+        if len(list_dir) == 0:
+            return ""
+        for dir in list_dir:
+            if os.path.isdir(dir_name + "/" + dir):
+                previous_list = list_dir[:]
+                result = find_first(filename, (dir_name + "/" + dir))
+                list_dir = previous_list[:]
+                if result:
+                    return result
+            elif dir == filename:
+                treasure = dir_name + "/" + dir
+                return os.path.relpath(treasure, os.path.abspath(repository_path))
+        return result"""
 
 
 def find(filename: str, dir_name: str) -> []:
-       result = []
-       if os.path.exists(filename):
-            result += [os.path.relpath(filename,os.path.abspath(repository_path))]
+    result = []
+    if os.path.exists(filename):
+        result += [os.path.relpath(filename, os.path.abspath(repository_path))]
+        return result
+    else:
+        list_dir = list(path_names.name for path_names in os.scandir(dir_name))
+        if len(list_dir) == 0:
             return result
-       else:
-            list_dir = list(path_names.name for path_names in os.scandir(dir_name))
-            if len(list_dir) == 0:
+        for dir in list_dir:
+            if os.path.isdir(dir_name + "/" + dir):
+                previous_list = list_dir[:]
+                result += find(filename, (dir_name + "/" + dir))
+                list_dir = previous_list[:]
+            elif dir == filename:
+                treasure = dir_name + "/" + dir
+                result += [os.path.relpath(treasure, os.path.abspath(repository_path))]
                 return result
-            for dirc in list_dir:
-                if os.path.isdir(dir_name + "/" + dirc):
-                   previous_list = list_dir[:]
-                   result += find(filename,(dir_name + "/" + dirc))
-                   list_dir = previous_list[:]
-                elif dirc == filename:
-                   treasure = dir_name + "/" + dirc
-                   result += [os.path.relpath(treasure,os.path.abspath(repository_path))] 
-                   return result
-            return result
-
+        return result
 
 
 def start_commit_updater():
@@ -124,16 +163,15 @@ def check_commit():
     master = repo.head.reference
     repo_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
 
-
-
     while not killer.kill:
         try:
             result = g.pull()
         except Exception as failed_commit:
-            print(failed_commit)
+            logger.log("error", str(failed_commit))
             dolphin_sleep()
             continue
 
+        logger.log("info", "executing check_commit")
         commit_date = datetime.datetime.fromtimestamp(master.commit.committed_date)
         commit_message = master.commit.message
         commit_author = master.commit.author.name
@@ -142,7 +180,7 @@ def check_commit():
         if str(commit_date) != str(last_commit_date):
             bot.send_message(chat_id, "New commit in " + repo_name + "\nTitle: " + commit_message + "  " "\nBy: " +
                              commit_author + "\nDate: " + str(commit_date))
-            if(result != "Already up to date."):
+            if result != "Already up to date.":
                 bot.send_message(chat_id, result)
             last_commit_date = commit_date
             set_key(env_path, "LAST_COMMIT_DATE", str(last_commit_date))
@@ -151,11 +189,14 @@ def check_commit():
 
 @bot.message_handler(commands=['stop'])
 def stop(message):
+    logger.log("info", "stopping...")
     bot.reply_to(message, "Stopping...")
     bot.stop_polling()
 
+
 @bot.message_handler(commands=['lastcommit'])
 def lastcommit(message):
+    logger.log("info", "executing lastcommit")
     repo_dir = repository_path
     repo = git.Repo(repo_dir)
     master = repo.head.reference
@@ -167,12 +208,12 @@ def lastcommit(message):
 
     # New commit
     bot.reply_to(message, "Last commit in " + repo_name + "\nTitle: " + commit_message + "  " "\nBy: " +
-                         commit_author + "\nDate: " + str(commit_date))
+                 commit_author + "\nDate: " + str(commit_date))
 
-        
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
+    logger.log("info", "executing send_welcome")
     response = "Ue " + message.from_user.first_name
     bot.reply_to(message, response)
 
@@ -180,126 +221,109 @@ def send_welcome(message):
 # /ping command handler
 @bot.message_handler(commands=['ping'])
 def ping_pong(message):
+    logger.log("info", "executing ping_pong")
     bot.reply_to(message, "pong")
 
-
-@bot.message_handler(commands=['find_first', 'findfirst', 'first'])
-def start_find_first(message):
-    res = ""
-
-    filename = str(message.text.split(" ",1)[1:])
-    tmp = filename.strip("['")
-    filename = tmp.strip("']")
-    #finds the first occourrence of a file, given its name.
-    try:
-             #no filename is provided
-           if not filename:
-              response = "Specify  the file to search!"
-              bot.reply_to(message, response)
-           else:
-               res = find_first(filename, repository_path)
-
-               if not res :
-                 response = "File Not found!"
-                 bot.reply_to(message, response)
-               else:
-                 response = res
-                 bot.reply_to(message, response)
-
-    except Exception as e:
-         print(e)
-         return
 
 @bot.message_handler(commands=['find', 'all', 'findall'])
 def start_find(message):
     res = []
-
-    filename = str(message.text.split(" ",1)[1:])
+    logger.log("info", "executing start_find")
+    filename = str(message.text.split(" ", 1)[1:])
     tmp = filename.strip("['")
     filename = tmp.strip("']")
-    #finds file in repo recursively (finds the first one with matching name)
+    # finds file in repo recursively (finds the first one with matching name)
     try:
-             # if no filename is provided
-           if not filename:
-              response = "Specify  the file to search!"
-              bot.reply_to(message, response)
-           else:
-               res = find(filename, repository_path)
-               if not res :
-                 response = "File Not found!"
-                 bot.reply_to(message, response)
-               else:
-                 for x in res:
-                              bot.reply_to(message, x)
+        # if no filename is provided
+        if not filename:
+            logger.log("warning", "In start_find: no file provided")
+            response = "Specify the file to search!"
+            bot.reply_to(message, response)
+        else:
+            res = find(filename, repository_path)
+            if not res:
+                logger.log("info", "In start_find: no file found")
+                response = "File Not found!"
+                bot.reply_to(message, response)
+            else:
+                logger.log("info", "In start_find: 1 or more files found")
+                for x in res:
+                    bot.reply_to(message, x)
 
     except Exception as e:
-         print(e)
-         return
-
-
+        logger.log("error", str(e))
+        return
 
 
 # /cat command handler
 @bot.message_handler(commands=['cat'])
 def cat_file(message):
+    logger.log("info", "Executing cat_file")
     file_path = ""
 
     try:
         file_path = obtain_path(message.text, "/cat ")  # get file_path
         # if no path is provided
         if file_path == "":
+            logger.log("warning", "In cat_file: no path provided")
             response = "Meow! Specify the path or the file in the repo!"
 
         # check if the file exists
-        elif not os.path.exists(file_path): 
-               response = "File Not Found!"
+        elif not os.path.exists(file_path):
+            logger.log("info", "In cat_file: no file found")
+            response = "File Not Found!"
 
         else:
+            logger.log("info", "In cat_file: file found")
             # get the MIME type of the file (_ ignores the rest of the result)
             mime_type, _ = mimetypes.guess_type(file_path)
 
             # check if the MIME type is a text type
             if mime_type and mime_type.startswith('text'):
+                logger.log("info", "In cat_file: file sent as text")
                 # writes the file into the message text
                 with open(file_path, 'r') as filereader:
                     response = filereader.read()
             else:
+                logger.log("info", "In cat_file: file sent as document")
                 # open the file in binary mode a send the file as a document
                 with open(file_path, 'rb') as file:
                     bot.send_document(message.chat.id, file)
                 return
 
     except Exception as read_file_error:
-        log(response)
+        logger.log("warning", response)
+        logger.log("error", str(read_file_error))
         response = "Error: " + str(read_file_error)
 
     response = "I got this path: " + file_path + '\n\n' + response
     bot.reply_to(message, response)
 
 
-
-# /setdelay command handler
+# /delay command handler
 @bot.message_handler(commands=['delay'])
 def set_delay(message):
     global refresh_delay
 
+    logger.log("info", "executing set_delay")
     try:
         delay = int(message.text.split()[1])
         refresh_delay = delay
         set_key(env_path, "REFRESH_DELAY", str(refresh_delay))
         response = "refresh_delay" + " has been set to " + str(refresh_delay) + " sec or " + str(
             round((delay / 60), 2)) + " min"  # by peppe
-        
+        logger.log("info", "changed delay to: " + delay)
+
     except Exception as convert_error:
         response = "Error: " + str(convert_error)
-        log(convert_error)
+        logger.log("error", str(convert_error))
 
     bot.reply_to(message, response)
-    
 
 
 @bot.message_handler(commands=['ls'])  # credt
 def ls(message):
+    logger.log("info", "executing ls")
     try:
         dir_path = message.text.replace("/ls ", "")  # Correct the path extraction
 
@@ -318,6 +342,7 @@ def ls(message):
             for filename in file_list:
                 response += f"{filename}\n"
         else:
+            logger.log("info", "in ls: directory not found")
             response = "Directory not found."
 
     except Exception as error:
@@ -351,10 +376,9 @@ def send_help_en(message):
     bot.reply_to(message, help_message)
 
 
-
 if __name__ == '__main__':
-    killer = Process_Killer()
-    log("I'm alive!")
+    killer = ProcessKiller()
+    logger.log('info', "I'm alive!")
     start_commit_updater()
 
     while not killer.kill:
@@ -364,5 +388,5 @@ if __name__ == '__main__':
         except Exception as connection_timeout:
             print(str(datetime.datetime) + str(connection_timeout))
             dolphin_sleep()
-        if (pid == 0):
-            bot.send_message(chatid,"sto per morire")
+
+    logger.close()

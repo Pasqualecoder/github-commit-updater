@@ -1,8 +1,10 @@
 provarepo/
-venv
+env/
+venv/
 UNISA/
 .idea/
 .env
+file_log.log
 .env2
 .secret
 config.ini
