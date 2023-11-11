@@ -1,6 +1,7 @@
 import os
 import subprocess
 import datetime
+import pwd
 
 
 # Input function with validation
@@ -11,7 +12,12 @@ def get_input(prompt, validation_func):
             return user_input
         else:
             print("Invalid input. Please try again.")
-
+def get_user() -> str:
+    try: 
+        return pwd.getpwuid(os.stat(os.getcwd()).st_uid).pw_name
+    except Exception as e:
+        print(f"Error getting user: {e}")
+        return os.getlogin()  
 
 # Validate token
 def validate_token(token):
@@ -39,6 +45,7 @@ def create_or_update_env_file():
     repository_path = f"'{repository_path.strip('/')}/'"
     current_date_time = f"'{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}'"
 
+
     with open('.env', 'w') as env_file:
         env_file.write(f'TOKEN={bot_token}\n')
         env_file.write(f'CHAT_ID={chat_id}\n')
@@ -48,6 +55,53 @@ def create_or_update_env_file():
 
     print(".env file created successfully!")
 
+
+def edit_service_config():
+    try:
+        if subprocess.run(['sudo','cp', 'service_template.conf', 'github-commit-updater.service'], check=True):
+             print("Error copying service config template, aborting...")
+             return 1
+        with open('github-commit-updater.service', 'r') as service_file:
+            service_data = service_file.read()
+        #setting the working directory to the current directory
+        service_data = service_data.replace('WorkingDirectory=', f'WorkingDirectory={os.getcwd()}')
+        service_data = service_data.replace('User=', f'User={os.getlogin if os.getlogin() in os.getcwd else get_user()}')   
+        service_data = service_data.replace('ExecStart=', f'ExecStart={os.getcwd()}/venv/bin/python3 -m main')
+        with open('github-commit-updater.service', 'w') as service_file:
+            service_file.write(service_data)
+    except Exception as e:
+        print(f"Error editing service config: {e}")
+        return 1
+     
+
+
+def install_service():
+     try:
+        #check if systemd is installed
+          checkpkg =  subprocess.run(['sudo', 'which', 'systemctl'], check=True, capture_output=True, text=True)
+          if checkpkg.returncode != 0 or checkpkg.stdout.strip() != "/usr/bin/systemctl":
+                print("systemd not found, installing systemd...")
+                subprocess.run(['sudo', 'apt', 'install', 'systemd'], check=True)   
+        #check if the service is already installed  
+          checkservice = subprocess.run(['sudo', 'systemctl', 'status', 'github-commit-updater.service'], check=True, capture_output=True, text=True) 
+          if checkservice.returncode == 0:
+                    print("Service already installed, removing...")
+                    subprocess.run(['sudo', 'systemctl', 'stop', 'github-commit-updater.service'], check=True)
+                    subprocess.run(['sudo', 'systemctl', 'disable', 'github-commit-updater.service'], check=True)
+                    subprocess.run(['sudo', 'rm', '/etc/systemd/system/github-commit-updater.service'], check=True)
+                    subprocess.run(['sudo', 'systemctl', 'daemon-reload'], check=True)
+                    subprocess.run(['sudo', 'systemctl', 'reset-failed'], check=True)       
+        #check if the service config was edited successfully   
+          if   edit_service_config():  
+               print("Error editing service config, aborting...")
+               return 0
+          subprocess.run(['sudo', 'cp', 'github-commit-updater.service', '/etc/systemd/system/github-commit-updater.service'], check=True)
+          subprocess.run(['sudo', 'systemctl', 'daemon-reload'], check=True)
+          subprocess.run(['sudo', 'systemctl', 'enable', 'github-commit-updater.service'], check=True)
+          subprocess.run(['sudo', 'systemctl', 'start', 'github-commit-updater.service'], check=True)
+          print("Service installed successfully!")
+     except subprocess.CalledProcessError as e:
+          print(f"Error installing service: {e}")    
 
 def install_dependencies():
     try:
@@ -69,3 +123,6 @@ if __name__ == "__main__":
     install = input("Do you want to install required dependencies? (y/n): ").strip().lower()
     if install == 'y':
         install_dependencies()
+    installservice = input("Do you want to install the bot as a systemd service? (y/n): ").strip().lower()
+    if installservice == 'y':
+        install_service()
