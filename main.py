@@ -251,7 +251,7 @@ def cat_file(message):
             response = "Meow! Specify the path or the file in the repo!"
 
         # check if the file exists
-        elif not os.path.exists(file_path): 
+        elif not os.path.exists(file_path):
                response = "File Not Found!"
 
         else:

@@ -25,14 +25,14 @@ means that the bot is offline.
 - ### push
 - push a file sent by telegram in a given directory
 
-- migliorare gestione delle eccezzione
+- migliorare gestione delle eccezioni
 - usare un file per il log
 - riorganizzare il codice
 - documentare il codice
-- migliorare gesione input utente
+- migliorare gestione input utente
 - migliorare interfaccia utente
 - aggiungere sicurezza
 - pull con comando 
 - migliorare query files
 - cache dei risultati frequenti
-- supporto a piu repositorty
+- supporto a piu repository
