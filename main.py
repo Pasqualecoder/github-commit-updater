@@ -188,11 +188,11 @@ def check_commit():
         dolphin_sleep()
 
 
-@bot.message_handler(commands=['stop'])
+'''@bot.message_handler(commands=['stop'])
 def stop(message):
     logger.log("info", "stopping...")
     bot.reply_to(message, "Stopping...")
-    bot.stop_polling()
+    bot.stop_polling()'''
 
 
 @bot.message_handler(commands=['lastcommit'])
@@ -354,7 +354,7 @@ def ls(message):
 
     bot.reply_to(message, response)
 
-
+# FIXME not working 
 @bot.message_handler(commands=['push'])
 def push(message):
     logger.log("info", "executing push")
@@ -368,11 +368,16 @@ def push(message):
     if os.path.isdir(dir_path):
         logger.log("debug", f"in push: Directory: {dir_path} Found!")
         bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo")
-        bot.register_next_step_handler(message, msgToPush, dir_path)
+        bot.register_next_step_handler(message, msg_to_push, dir_path)
 
+<<<<<<< Updated upstream
 @bot.message_handler(func=lambda message: True)
 def msgToPush(message, dir_path):
     if message.user.id
+=======
+
+def msg_to_push(message, dir_path):
+>>>>>>> Stashed changes
     if message.text:
         i = 0
         filename = f"file_{i}.txt"
