@@ -6,18 +6,22 @@
     - insert button to cat the file under every messagge of the path 
     - insert button to copy the path
 - push a file sent by telegram in a given directory
-- migliorare gestione delle eccezioni
+- migliorare gestione delle eccezioni:
+    -gestione dei tentativi di connessione all' API telegram.
 - ~~migliorare log con libreria logging~~ 
     - aggiungere piu log 
 - riorganizzare il codice
 - documentare il codice
-- migliorare gestione input utente
+- migliorare gestione input utente:
+    -implementare una queue per i comandi ricevuti (con buffer limitato e gestione al riempimento). (?)
+    -creare un sistema di delezione messaggi (risposte del bot & comandi inseriti dall'utente) temporizzato. (?)
 - migliorare interfaccia utente
 - aggiungere sicurezza
 - pull con comando 
 - migliorare query files con find
 - cache dei risultati frequenti
-- supporto a piu repository
+- supporto a piu repository:
     -send messages about commit from multiple repos
     -command to select which repos to check 
-    -command to add repos and to remove repos 
+    -command to add repos and to remove repos
+
