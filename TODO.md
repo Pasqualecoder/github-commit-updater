@@ -1,27 +1,46 @@
-# To-do list
-- pinned a message on the top, the bot modifies the text once a minute showing the current time. Doing so if the showed time is different from the current time it means that the bot is offline.
-- if a code get asked with cat send the image with carbon
-- update help file with all new commands 
-- ~~cat~~
-    - insert button to cat the file under every messagge of the path 
-    - insert button to copy the path
-- push a file sent by telegram in a given directory
-- migliorare gestione delle eccezioni:
-    -gestione dei tentativi di connessione all' API telegram.
-- ~~migliorare log con libreria logging~~ 
-    - aggiungere piu log 
-- riorganizzare il codice
-- documentare il codice
-- migliorare gestione input utente:
-    -implementare una queue per i comandi ricevuti (con buffer limitato e gestione al riempimento). (?)
-    -creare un sistema di delezione messaggi (risposte del bot & comandi inseriti dall'utente) temporizzato. (?)
-- migliorare interfaccia utente
-- aggiungere sicurezza
-- pull con comando 
-- migliorare query files con find
-- cache dei risultati frequenti
-- supporto a piu repository:
-    -send messages about commit from multiple repos
-    -command to select which repos to check 
-    -command to add repos and to remove repos
+# TODOs
+
+## Sviluppo e Funzionalità
+
+- [ ] Fissare un messaggio in cima, il bot modifica il testo ogni minuto mostrando l'orario corrente. Se l'orario mostrato è diverso dall'orario attuale, significa che il bot è offline.
+- [ ] Se viene richiesto un codice con "cat", invia l'immagine con Carbon.
+- [ ] Aggiornare help con tutti i nuovi comandi.
+- [x] ~~Implementare funzionalità per il comando "cat"~~
+    - [ ] Inserire un pulsante per "cat" il file sotto ogni messaggio del percorso.
+    - [ ] Inserire un pulsante per copiare il percorso.
+- [x] ~~Pushare un file inviato da Telegram in una directory specifica.~~
+
+## Baghi
+
+- [ ] Bug nella funzione push quando vengono mandati messaggi da altri utenti (?)
+
+## Ottimizzazione del Codice
+
+- [ ] Migliorare la gestione delle eccezioni:
+    - [ ] Gestire i tentativi di connessione all'API di Telegram.
+- [x] ~~Migliorare i log con la libreria logging~~
+    - [ ] Aggiungere più log.
+- [ ] Riorganizzare il codice.
+- [ ] Documentare il codice.
+
+## Miglioramenti Utente e Sicurezza
+
+- [ ] Migliorare l'interfaccia utente.
+- [ ] Aggiungere misure di sicurezza.
+- [ ] Migliorare la gestione dell'input utente:
+    - [ ] Implementare una coda per i comandi ricevuti con un buffer limitato e gestione dell'overflow. (?)
+    - [ ] Creare un sistema per eliminare i messaggi (risposte del bot e comandi inseriti dall'utente) dopo un certo tempo. (?)
+
+## Miglioramenti Funzionali
+
+- [ ] Implementare la funzionalità "pull" con un comando.
+- [ ] Migliorare la ricerca dei file con "find".
+- [ ] Cachare i risultati delle query frequenti.
+
+## Gestione di Più Repository
+
+- [ ] Supportare più repository:
+    - [ ] Inviare messaggi riguardanti commit da repository multipli.
+    - [ ] Comandi per selezionare quali repository controllare.
+    - [ ] Comandi per aggiungere e rimuovere repository.
 

@@ -356,11 +356,9 @@ def ls(message):
     bot.reply_to(message, response)
 
 
-
-# FIXME not working 
+# BUG non funziona quando altre persone mandano messaggi (da testare)
 @bot.message_handler(commands=['push'])
 def push(message):
-    bot.reply_to(message, f"{message.from_user.id}")
     logger.log("info", "executing push")
     dir_path = message.text.replace("/push ", "")
     if dir_path == "/push":
@@ -369,23 +367,22 @@ def push(message):
 
         dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
 
-
     logger.log("debug", f"in push: Directory received: {dir_path}")
     if os.path.isdir(dir_path):
         logger.log("debug", f"in push: Directory: {dir_path} Found!")
         markup = types.ForceReply(selective=False)
-        bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo", reply_markup=markup)
+        bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo",
+                     reply_markup=markup)
 
         # Let's use the msg_to_push function directly instead of registering next step handler
-        bot.register_next_step_handler(message, msg_to_push,  dir_path, message.from_user.id)
+        bot.register_next_step_handler(message, msg_to_push, dir_path, message.from_user.id)
     else:
         bot.reply_to(message, f"Directory {dir_path} not found!")
 
 
 def msg_to_push(message, dir_path, user_id):
-    if message.from_user.id == user_id:
+    while message.from_user.id == user_id:  # prima era un if da testare con il while
         content_type = ""
-        bot.reply_to(message, f"message sent by {message.from_user.username}: {message.text}")
         if message.text:
             content_type = "text"
             i = 0
@@ -414,7 +411,7 @@ def msg_to_push(message, dir_path, user_id):
             file_id = photo.file_id
             file_info = bot.get_file(file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            with open(dir_path+"/" +filename, 'wb') as new_file:
+            with open(dir_path + "/" + filename, 'wb') as new_file:
                 try:
                     new_file.write(downloaded_file)
                     logger.log("info", f"In push: Photo saved as {filename} in {dir_path}")
