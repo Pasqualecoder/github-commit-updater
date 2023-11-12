@@ -354,86 +354,98 @@ def ls(message):
 
     bot.reply_to(message, response)
 
+
+
 # FIXME not working 
 @bot.message_handler(commands=['push'])
 def push(message):
+    #bot.reply_to(message, f"{message.from_user.id}")
     logger.log("info", "executing push")
     dir_path = message.text.replace("/push ", "")
     if dir_path == "/push":
         dir_path = repository_path
     else:
-        dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
+        print (10)
+        #dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
 
-    logger.log("debug", f"in push: Directory recieved: {dir_path}")
+
+    logger.log("debug", f"in push: Directory received: {dir_path}")
     if os.path.isdir(dir_path):
         logger.log("debug", f"in push: Directory: {dir_path} Found!")
-        bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo")
-        bot.register_next_step_handler(message, msg_to_push, dir_path)
+        #bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo")
+        # Let's use the msg_to_push function directly instead of registering next step handler
+        bot.register_next_step_handler(message, msg_to_push,  dir_path, message.from_user.id)
+    else:
+        bot.reply_to(message, f"Directory {dir_path} not found!")
 
-<<<<<<< Updated upstream
-@bot.message_handler(func=lambda message: True)
-def msgToPush(message, dir_path):
-    if message.user.id
-=======
 
-def msg_to_push(message, dir_path):
->>>>>>> Stashed changes
-    if message.text:
-        i = 0
-        filename = f"file_{i}.txt"
-        while os.path.isfile(f"{dir_path}/{filename}"):
-            i += 1
+def msg_to_push(message, dir_path, user_id):
+    if message.
+    if message.from_user.id == user_id:
+        content_type = ""
+        bot.reply_to(message, f"message sent by {message.from_user.username}: {message.text}")
+        if message.text:
+            content_type = "text"
+            i = 0
             filename = f"file_{i}.txt"
-        try:
-            with open(f"{dir_path}/{filename}", "w") as file:
-                file.write(message.text)
-            logger.log("info", f"In push: Text message saved as {filename} in {dir_path}")
-        except Exception as e:
-            logger.log("error", f"In push: Error writing text message: {e}")
+            while os.path.isfile(f"{dir_path}/{filename}"):
+                i += 1
+                filename = f"file_{i}.txt"
+            try:
+                with open(f"{dir_path}/{filename}", "w") as file:
+                    file.write(message.text)
+                logger.log("info", f"In push: Text message saved as {filename} in {dir_path}")
+            except Exception as e:
+                logger.log("error", f"In push: Error writing text message: {e}")
 
-        repo = git.Repo(repository_path)
-        repo.index.add([f"{dir_path}/{filename}"])
+            repo = git.Repo(repository_path)
+            repo.index.add([f"{dir_path}/{filename}"])
 
-    if message.photo:
-        i = 0
-        filename = f"photo_{i}.jpg"
-        while os.path.isfile(f"{dir_path}/{filename}"):
-            i += 1
+        if message.photo:
+            content_type = "photo"
+            i = 0
             filename = f"photo_{i}.jpg"
-        photo = message.photo[-1]
-        file_id = photo.file_id
-        new_file = bot.get_file(file_id)
+            while os.path.isfile(f"{dir_path}/{filename}"):
+                i += 1
+                filename = f"photo_{i}.jpg"
+            photo = message.photo[-1]
+            file_id = photo.file_id
+            file_info = bot.get_file(file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            with open(dir_path+"/" +filename, 'wb') as new_file:
+                try:
+                    new_file.write(downloaded_file)
+                    logger.log("info", f"In push: Photo saved as {filename} in {dir_path}")
+                except Exception as e:
+                    logger.log("error", f"In push: Error downloading photo: {e}")
+
+        if message.document:
+            content_type = "document"
+            document = message.document
+            i = 0
+            filename = document.file_name
+            while os.path.isfile(f"{dir_path}/{filename}"):
+                i += 1
+                name, extension = os.path.splitext(filename)
+                filename = f"{name}_{i}{extension}"
+            file_id = document.file_id
+            try:
+                bot.get_file(file_id).download(f'{dir_path}/{filename}')
+                logger.log("info", f"In push: Document saved as {filename} in {dir_path}")
+            except Exception as e:
+                logger.log("error", f"In push: Error downloading document: {e}")
+
+        logger.log("debug", f"In msg_to_push: Received {content_type} from user {message.from_user.username}")
+
+        commit_message = f"commit from telegram, adding {filename} to {dir_path}"
         try:
-            new_file.download(f'{dir_path}/{filename}')
-            logger.log("info", f"In push: Photo saved as {filename} in {dir_path}")
+            repo = git.Repo(repository_path)
+            repo.index.commit(commit_message)
+            origin = repo.remote(name='origin')
+            origin.push()
+            logger.log("info", f"In push: Changes committed and pushed to the repository")
         except Exception as e:
-            logger.log("error", f"In push: Error downloading photo: {e}")
-
-    if message.document:
-        document = message.document
-        i = 0
-        filename = document.file_name
-        while os.path.isfile(f"{dir_path}/{filename}"):
-            i += 1
-            name, extension = os.path.splitext(filename)
-            filename = f"{name}_{i}{extension}"
-        file_id = document.file_id
-        try:
-            bot.get_file(file_id).download(f'{dir_path}/{filename}')
-            logger.log("info", f"In push: Document saved as {filename} in {dir_path}")
-        except Exception as e:
-            logger.log("error", f"In push: Error downloading document: {e}")
-
-    commit_message = f"commit from telegram, adding {filename} to {dir_path}"
-    try:
-        repo = git.Repo(repository_path)
-        repo.index.commit(commit_message)
-        origin = repo.remote(name='origin')
-        origin.push()
-        logger.log("info", f"In push: Changes committed and pushed to the repository")
-    except Exception as e:
-        logger.log("error", f"In push: Error in git commit and push: {e}")
-
+            logger.log("error", f"In push: Error in git commit and push: {e}")
 
 
 @bot.message_handler(commands=['help_it'])

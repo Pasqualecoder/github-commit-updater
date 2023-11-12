@@ -1,4 +1,4 @@
 GitPython
 python-telegram-bot
 pyTelegramBotAPI
-python-dotenv
+python-dotenv~=1.0.0
