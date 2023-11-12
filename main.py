@@ -370,8 +370,9 @@ def push(message):
         bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo")
         bot.register_next_step_handler(message, msgToPush, dir_path)
 
-
+@bot.message_handler(func=lambda message: True)
 def msgToPush(message, dir_path):
+    if message.user.id
     if message.text:
         i = 0
         filename = f"file_{i}.txt"
