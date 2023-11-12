@@ -9,6 +9,7 @@ import telebot
 import logging
 from dotenv import dotenv_values
 from dotenv import set_key
+from telebot import types
 
 # BOT SETUP
 env_path = '.env'
@@ -359,20 +360,22 @@ def ls(message):
 # FIXME not working 
 @bot.message_handler(commands=['push'])
 def push(message):
-    #bot.reply_to(message, f"{message.from_user.id}")
+    bot.reply_to(message, f"{message.from_user.id}")
     logger.log("info", "executing push")
     dir_path = message.text.replace("/push ", "")
     if dir_path == "/push":
         dir_path = repository_path
     else:
-        print (10)
-        #dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
+
+        dir_path = repository_path + dir_path.strip()  # Remove leading/trailing spaces
 
 
     logger.log("debug", f"in push: Directory received: {dir_path}")
     if os.path.isdir(dir_path):
         logger.log("debug", f"in push: Directory: {dir_path} Found!")
-        #bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo")
+        markup = types.ForceReply(selective=False)
+        bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo", reply_markup=markup)
+
         # Let's use the msg_to_push function directly instead of registering next step handler
         bot.register_next_step_handler(message, msg_to_push,  dir_path, message.from_user.id)
     else:
@@ -380,7 +383,6 @@ def push(message):
 
 
 def msg_to_push(message, dir_path, user_id):
-    if message.
     if message.from_user.id == user_id:
         content_type = ""
         bot.reply_to(message, f"message sent by {message.from_user.username}: {message.text}")
