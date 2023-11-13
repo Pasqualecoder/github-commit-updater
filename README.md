@@ -56,19 +56,34 @@ To simplify the installation process, you can use the provided setup script:
    python first_setup.py
    ```
 
-   The script will generate an `.env` file with the provided data and, optionally, install the required dependencies.
+   The script will generate an `.env` file with the provided data, install the required dependencies and, optionally setup the script as a new systemctl service.
 
 5. After running the setup script, your bot is ready to use.
 
-## Usage
+## Usage (without systemd service)
 
-To use the Telegram Git Commit Bot, run the following command:
+Start the bot using the command:
 
 ```markdown
-python main.py
+python3 main.py
 ```
+The bot will start running in your terminal instance and checking for new commits in your Git repository. It will send updates to your specified Telegram chat whenever there's a new commit. **BEWARE**: the bot instance will live as long as the terminal instance does (normal behaviour).
 
-The bot will start running and checking for new commits in your Git repository. It will send updates to your specified Telegram chat whenever there's a new commit.
+
+## Usage (with systemd service)
+Using systemctl, you can run the bot using following commands:
+
+```markdown
+systemctl start github-commit-updater
+systemctl stop github-commit-updater
+systemctl restart github-commit-updater
+systemctl status github-commit-updater
+```
+Please refer to: [https://www.freedesktop.org/software/systemd/man/latest/systemctl.html]
+
+
+
+
 
 ## Commands
 
