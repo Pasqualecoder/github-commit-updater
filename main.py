@@ -20,7 +20,7 @@ refresh_delay = int(env_data['REFRESH_DELAY'])
 repository_path = env_data['REPOSITORY_PATH']
 last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
-bot.send_message(chat_id, "I'm alive!")
+
 
 
 class Logger:
@@ -478,7 +478,7 @@ def send_help_en(message):
 
 if __name__ == '__main__':
     killer = ProcessKiller()
-    logger.log('info', "I'm alive!")
+    logger.log('info', "Bot Running!")
     start_commit_updater()
 
     while not killer.kill:
