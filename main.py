@@ -359,6 +359,7 @@ def ls(message):
 
 
 # BUG non funziona quando altre persone mandano messaggi (da testare)
+'''
 @bot.message_handler(commands=['push'])
 def push(message):
     logger.log("info", "executing push")
@@ -383,11 +384,7 @@ def push(message):
 
 
 def msg_to_push(message, dir_path, user_id):
-<<<<<<< Updated upstream
-    if  message.from_user.id == user_id:  # prima era un if da testare con il while
-=======
     if message.from_user.id == user_id:  # prima era un if da testare con il while
->>>>>>> Stashed changes
         content_type = ""
         filename = "None"
         if message.text:
@@ -453,7 +450,7 @@ def msg_to_push(message, dir_path, user_id):
             logger.log("info", f"In push: Changes committed and pushed to the repository")
         except Exception as e:
             logger.log("error", f"In push: Error in git commit and push: {e}")
-
+'''
 
 @bot.message_handler(commands=['help_it'])
 def send_help_it(message):
