@@ -73,7 +73,6 @@ class ProcessKiller:
 
     def better_exit(self, *args):
         self.kill = True
-        pid = os.getpid()
         status = os.wait()
         bot.send_message(chat_id, f"I'm dead! Status: {status[1]}")
         logger.log("info", "process shutdown with better exit")
@@ -81,7 +80,6 @@ class ProcessKiller:
 
     def brutal_exit(self, *args):
         self.kill = True
-        pid = os.getpid()
         status = os.wait()
         bot.send_message(chat_id, f"I'm dead! Status: {status[1]}")
         logger.log("info", "process shutdown with brutal shutdown")
@@ -167,6 +165,11 @@ def check_commit():
 
     while not killer.kill:
         try:
+            my_date = datetime.datetime.now()
+            date = my_date.strftime('%Y-%m-%d %H:%M:%S')
+            chat_info = bot.get_chat(chat_id)
+            pinned_message_id = chat_info.pinned_message.message_id
+            bot.edit_message_text(f"Last check: {date}", chat_id, pinned_message_id)
             result = g.pull()
         except Exception as failed_commit:
             logger.log("error", str(failed_commit))
@@ -229,7 +232,6 @@ def ping_pong(message):
 
 @bot.message_handler(commands=['find'])
 def start_find(message):
-    res = []
     logger.log("info", "executing start_find")
     # filename = str(message.text.split(" ", 1)[1:])
     # tmp = filename.strip("['")
@@ -256,7 +258,7 @@ def start_find(message):
                     bot.reply_to(message, x)
 
     except Exception as e:
-        logger.log("error", str(e))
+        logger.log("error", f"In start_find: {str(e)}")
         return
 
 
@@ -317,7 +319,7 @@ def set_delay(message):
         set_key(env_path, "REFRESH_DELAY", str(refresh_delay))
         response = "refresh_delay" + " has been set to " + str(refresh_delay) + " sec or " + str(
             round((delay / 60), 2)) + " min"  # by peppe
-        logger.log("info", "changed delay to: " + delay)
+        logger.log("info", "changed delay to: " + str(delay))
 
     except Exception as convert_error:
         response = "Error: " + str(convert_error)
@@ -370,7 +372,7 @@ def push(message):
     logger.log("debug", f"in push: Directory received: {dir_path}")
     if os.path.isdir(dir_path):
         logger.log("debug", f"in push: Directory: {dir_path} Found!")
-        markup = types.ForceReply(selective=False)
+        markup = types.ForceReply(selective=True)
         bot.reply_to(message, f"Directory {dir_path} found, send the image/document/text to push in the repo",
                      reply_markup=markup)
 
@@ -383,6 +385,7 @@ def push(message):
 def msg_to_push(message, dir_path, user_id):
     while message.from_user.id == user_id:  # prima era un if da testare con il while
         content_type = ""
+        filename = "None"
         if message.text:
             content_type = "text"
             i = 0
@@ -418,6 +421,7 @@ def msg_to_push(message, dir_path, user_id):
                 except Exception as e:
                     logger.log("error", f"In push: Error downloading photo: {e}")
 
+        # FIXME non funziona download non e' la funzione giusta
         if message.document:
             content_type = "document"
             document = message.document
@@ -429,7 +433,7 @@ def msg_to_push(message, dir_path, user_id):
                 filename = f"{name}_{i}{extension}"
             file_id = document.file_id
             try:
-                bot.get_file(file_id).download(f'{dir_path}/{filename}')
+                bot.get_file(file_id).download(f'{dir_path}/{filename}')  # !!!!!!
                 logger.log("info", f"In push: Document saved as {filename} in {dir_path}")
             except Exception as e:
                 logger.log("error", f"In push: Error downloading document: {e}")
@@ -480,7 +484,6 @@ if __name__ == '__main__':
     while not killer.kill:
         try:
             bot.infinity_polling(interval=5)
-            pid = os.get_pid()
         except Exception as connection_timeout:
             print(str(datetime.datetime) + str(connection_timeout))
             dolphin_sleep()
