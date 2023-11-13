@@ -383,7 +383,7 @@ def push(message):
 
 
 def msg_to_push(message, dir_path, user_id):
-    while message.from_user.id == user_id:  # prima era un if da testare con il while
+    if  message.from_user.id == user_id:  # prima era un if da testare con il while
         content_type = ""
         filename = "None"
         if message.text:
