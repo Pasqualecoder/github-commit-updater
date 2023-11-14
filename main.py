@@ -22,7 +22,6 @@ last_commit_date = env_data['LAST_COMMIT_DATE']
 bot = telebot.TeleBot(BOT_TOKEN)
 
 
-
 class Logger:
     def __init__(self, name, log_file):
         self.logger = logging.getLogger(name)
@@ -264,47 +263,23 @@ def start_find(message):
         logger.log("error", f"In start_find: {str(e)}")
         return
 
-@bot.callback_query_handler(func=lambda call: call.data)
-def find_to_cat(call):
-    bot.answer_callback_query(call.id, call.data)
 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('/cat'))
+def handle_callback_cat(call):
+    file_path = obtain_path(call.data, "/cat ")
+    logger.log("debug", f"{file_path}")
+    cat_file(file_path)
 
 # /cat command handler
 @bot.message_handler(commands=['cat'])
-def cat_file(message):
+def cat(message):
     logger.log("info", "Executing cat_file")
     file_path = ""
+    response = ""
 
     try:
         file_path = obtain_path(message.text, "/cat ")  # get file_path
-        # if no path is provided
-        if file_path == "":
-            logger.log("warning", "In cat_file: no path provided")
-            response = "Meow! Specify the path or the file in the repo!"
-
-        # check if the file exists
-        elif not os.path.exists(file_path):
-            logger.log("info", "In cat_file: no file found")
-            response = "File Not Found!"
-
-        else:
-            logger.log("info", "In cat_file: file found")
-            # get the MIME type of the file (_ ignores the rest of the result)
-            mime_type, _ = mimetypes.guess_type(file_path)
-
-            # check if the MIME type is a text type
-            if mime_type and mime_type.startswith('text'):
-                logger.log("info", "In cat_file: file sent as text")
-                # writes the file into the message text
-                with open(file_path, 'r') as filereader:
-                    response = filereader.read()
-            else:
-                logger.log("info", "In cat_file: file sent as document")
-                # open the file in binary mode a send the file as a document
-                with open(file_path, 'rb') as file:
-                    bot.send_document(message.chat.id, file)
-                return
-
+        cat_file(file_path)
     except Exception as read_file_error:
         logger.log("warning", response)
         logger.log("error", str(read_file_error))
@@ -312,6 +287,37 @@ def cat_file(message):
 
     response = "I got this path: " + file_path + '\n\n' + response
     bot.reply_to(message, response)
+
+
+def cat_file(file_dir) -> str:
+    if file_dir == "":
+        logger.log("warning", "In cat_file: no path provided")
+        response = "Meow! Specify the path or the file in the repo!"
+    # check if the file exists
+    elif not os.path.exists(file_dir):
+        logger.log("info", "In cat_file: no file found")
+        response = "File Not Found!"
+
+    else:
+        logger.log("info", "In cat_file: file found")
+        # get the MIME type of the file (_ ignores the rest of the result)
+        mime_type, _ = mimetypes.guess_type(file_dir)
+
+        # check if the MIME type is a text type
+        if mime_type and mime_type.startswith('text'):
+            logger.log("info", "In cat_file: file sent as text")
+            # writes the file into the message text
+            with open(file_dir, 'r') as filereader:
+                response = filereader.read()
+
+        else:
+            logger.log("info", "In cat_file: file sent as document")
+            # open the file in binary mode a send the file as a document
+            with open(file_dir, 'rb') as file:
+                bot.send_document(chat_id, file)
+                return
+
+    bot.send_message(chat_id, response)
 
 
 # /delay command handler
@@ -458,6 +464,7 @@ def msg_to_push(message, dir_path, user_id):
         except Exception as e:
             logger.log("error", f"In push: Error in git commit and push: {e}")
 '''
+
 
 @bot.message_handler(commands=['help_it'])
 def send_help_it(message):
