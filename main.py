@@ -266,6 +266,8 @@ def start_find(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('/cat'))
 def handle_callback_cat(call):
+    if not call.data.startswith('/cat'):
+        return
     file_path = obtain_path(call.data, "/cat ")
     logger.log("debug", f"{file_path}")
     cat_file(file_path)
@@ -358,9 +360,12 @@ def ls(message):
         if os.path.isdir(dir_path):
             # get a list of all files in the dir
             file_list = os.listdir(dir_path)
+
             # print the name of each file
+            keyboard = types.InlineKeyboardMarkup(row_width=1)
             for filename in file_list:
-                response += f"{filename}\n"
+                button = types.InlineKeyboardButton(f"{filename}", callback_data=f"/ls {os.getcwd()}/{filename}")
+                keyboard.add(button)
         else:
             logger.log("info", "in ls: directory not found")
             response = "Directory not found."
@@ -368,7 +373,36 @@ def ls(message):
     except Exception as error:
         response = f"Error: {str(error)}"
 
-    bot.reply_to(message, response)
+    bot.reply_to(message, "File corrispondenti alla ricerca", reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('/ls'))
+def callback_handler_ls(call):
+    if not call.data.startswith('/ls'):
+        return
+
+    dir_path = obtain_path(call.data, "/ls ")
+    # rinvoca ls
+    if os.path.isdir(dir_path):
+        response = f"ls of {dir_path}\n"
+        # get a list of all files in the dir
+        file_list = os.listdir(dir_path)
+        # print the name of each file
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        for filename in file_list:
+            button = types.InlineKeyboardButton(f"{filename}", callback_data="/ls" + os.getcwd() + "/" + filename)
+            keyboard.add(button)
+        bot.send_message(
+            chat_id=chat_id,
+            text=response,
+            reply_markup=keyboard
+        )
+
+    # fa la cat
+    else:
+        cat_file(dir_path)
+
+    call = 0
 
 
 # BUG non funziona quando altre persone mandano messaggi (da testare)

@@ -2,12 +2,12 @@
 
 ## Sviluppo e Funzionalità
 
-- [ ] Fissare un messaggio in cima, il bot modifica il testo ogni minuto mostrando l'orario corrente. Se l'orario mostrato è diverso dall'orario attuale, significa che il bot è offline.
+- [x] ~~Fissare un messaggio in cima, il bot modifica il testo ogni minuto mostrando l'orario corrente. Se l'orario mostrato è diverso dall'orario attuale, significa che il bot è offline.~~
 - [ ] Se viene richiesto un codice con "cat", invia l'immagine con Carbon.
 - [ ] Aggiornare help con tutti i nuovi comandi.
 - [x] ~~Implementare funzionalità per il comando "cat"~~
-    - [ ] Inserire un pulsante per "cat" il file sotto ogni messaggio del percorso.
-    - [ ] Inserire un pulsante per copiare il percorso.
+    - [x] ~~Inserire un pulsante per "cat" il file sotto ogni messaggio del percorso.~~
+    
 - [x] ~~Pushare un file inviato da Telegram in una directory specifica.~~
 
 ## Baghi
