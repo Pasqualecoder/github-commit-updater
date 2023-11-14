@@ -254,12 +254,19 @@ def start_find(message):
                 bot.reply_to(message, response)
             else:
                 logger.log("info", "In start_find: 1 or more files found")
+                keyboard = types.InlineKeyboardMarkup(row_width=1)
                 for x in res:
-                    bot.reply_to(message, x)
+                    button = types.InlineKeyboardButton(f"{str(x)}", callback_data=f"/cat {str(x)}")
+                    keyboard.add(button)
+                bot.reply_to(message, "File corrispondenti alla ricerca", reply_markup=keyboard)
 
     except Exception as e:
         logger.log("error", f"In start_find: {str(e)}")
         return
+
+@bot.callback_query_handler(func=lambda call: call.data)
+def find_to_cat(call):
+    bot.answer_callback_query(call.id, call.data)
 
 
 # /cat command handler
