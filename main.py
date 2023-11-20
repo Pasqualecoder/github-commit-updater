@@ -7,9 +7,11 @@ import mimetypes
 import git
 import telebot
 import logging
+import re
 from dotenv import dotenv_values
 from dotenv import set_key
 from telebot import types
+from fuzzywuzzy import fuzz
 
 # BOT SETUP
 env_path = '.env'
@@ -128,21 +130,30 @@ def obtain_path(arg: str, old: str) -> str:
 
 def find(filename: str, dir_name: str) -> []:
     result = []
+
+    def normalize_filename(name):
+        base, extension = os.path.splitext(name)
+        return re.sub(r'[^a-zA-Z0-9]', '', base.lower())
+
+    def is_similar(a, b):
+        return fuzz.ratio(a, b) > 90
+
     if os.path.exists(filename):
-        result += [os.path.relpath(filename, os.path.abspath(repository_path))]
+        result += [os.path.relpath(filename, os.path.abspath(dir_name))]
         return result
     else:
         list_dir = list(path_names.name for path_names in os.scandir(dir_name))
         if len(list_dir) == 0:
             return result
         for dir in list_dir:
-            if os.path.isdir(dir_name + "/" + dir):
+            current_path = os.path.join(dir_name, dir)
+            if os.path.isdir(current_path):
                 previous_list = list_dir[:]
-                result += find(filename, (dir_name + "/" + dir))
+                result += find(filename, current_path)
                 list_dir = previous_list[:]
-            elif dir == filename:
-                treasure = dir_name + "/" + dir
-                result += [os.path.relpath(treasure, os.path.abspath(repository_path))]
+            elif is_similar(normalize_filename(filename), normalize_filename(dir)):
+                treasure = os.path.join(dir_name, dir)
+                result += [os.path.relpath(treasure, os.path.abspath(dir_name))]
                 return result
         return result
 
@@ -253,7 +264,7 @@ def start_find(message):
                 bot.reply_to(message, response)
             else:
                 logger.log("info", "In start_find: 1 or more files found")
-                keyboard = types.InlineKeyboardMarkup(row_width=1)
+                keyboard = types.InlineKeyboardMarkup(row_width=2)
                 for x in res:
                     button = types.InlineKeyboardButton(f"{str(x)}", callback_data=f"/cat {str(x)}")
                     keyboard.add(button)
@@ -271,6 +282,7 @@ def handle_callback_cat(call):
     file_path = obtain_path(call.data, "/cat ")
     logger.log("debug", f"{file_path}")
     cat_file(file_path)
+
 
 # /cat command handler
 @bot.message_handler(commands=['cat'])
