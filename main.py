@@ -492,6 +492,13 @@ def send_help_en(message):
 
 
 if __name__ == '__main__':
+    anno_corrente = datetime.datetime.now().year
+
+    oggi = datetime.datetime.now().date()
+    inizio_anno = datetime.date(anno_corrente, 1, 1)
+
+    if oggi == inizio_anno:
+        bot.send_message(chat_id, "Buon Anno!!!!")
     killer = ProcessKiller()
     logger.log('info', "Bot Running!")
     start_commit_updater()
